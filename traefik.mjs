@@ -34,8 +34,9 @@ const CONFIG = {
     "cloudflarewarp",
     "auth-user",
     "common-ratelimit",
-    "gzip-compress",
     "strip-all-prefix",
+    "error-pages",
+    "gzip-compress",
   ],
   
   // Regex untuk validasi

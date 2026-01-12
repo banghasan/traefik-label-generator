@@ -12,6 +12,9 @@ services:
       - "--providers.docker.network=hasanNet"
       - "--entryPoints.web.address=:80"
 
+      ## Midleware Global
+      #- "--entrypoints.web.http.middlewares=error-pages@docker"
+
       ### Prometheus
       # Menambahkan Entrypoint khusus untuk metrics
       - "--entrypoints.metrics.address=:8082"

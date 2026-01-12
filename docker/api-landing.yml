@@ -8,7 +8,7 @@ services:
     #ports:
     #  - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html
+      - /home/banghasan/www/api-landing:/usr/share/nginx/html
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=hasanNet"
@@ -16,15 +16,16 @@ services:
       ## path /
       - "traefik.http.routers.www-api-landing.rule=Host(`api.domain.com`)"
       - "traefik.http.routers.www-api-landing.entrypoints=web"
-      - "traefik.http.routers.www-api-landing.priority=1"
-      - "traefik.http.routers.www-api-landing.middlewares=gzip-compress"
+      - "traefik.http.routers.www-api-landing.priority=2"
+      - "traefik.http.routers.www-api-landing.middlewares=error-pages,gzip-compress"
       - "traefik.http.services.www-api-landing.loadbalancer.server.port=80"
 
       ## path /doc
       - "traefik.http.routers.api-doc.rule=Host(`api.domain.com`) && PathPrefix(`/doc`)"
       - "traefik.http.routers.api-doc.entrypoints=web"
+      - "traefik.http.routers.api-doc.priority=1"
       - "traefik.http.routers.api-doc.service=apimuslim3-service"
-      - "traefik.http.routers.api-doc.middlewares=gzip-compress"
+      - "traefik.http.routers.api-doc.middlewares=error-pages,gzip-compress"
 
     networks:
       - hasanNet
