@@ -1,0 +1,34 @@
+services:
+  www-api-landing:
+    image: nginx:alpine
+    container_name: www-api-landing
+    restart: unless-stopped
+    env_file:
+      - .env
+    #ports:
+    #  - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=hasanNet"
+
+      ## path /
+      - "traefik.http.routers.www-api-landing.rule=Host(`api.domain.com`)"
+      - "traefik.http.routers.www-api-landing.entrypoints=web"
+      - "traefik.http.routers.www-api-landing.priority=1"
+      - "traefik.http.routers.www-api-landing.middlewares=gzip-compress"
+      - "traefik.http.services.www-api-landing.loadbalancer.server.port=80"
+
+      ## path /doc
+      - "traefik.http.routers.api-doc.rule=Host(`api.domain.com`) && PathPrefix(`/doc`)"
+      - "traefik.http.routers.api-doc.entrypoints=web"
+      - "traefik.http.routers.api-doc.service=apimuslim3-service"
+      - "traefik.http.routers.api-doc.middlewares=gzip-compress"
+
+    networks:
+      - hasanNet
+
+networks:
+  hasanNet:
+    external: true

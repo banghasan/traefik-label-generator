@@ -1,0 +1,24 @@
+services:
+  apimuslim3:
+    image: ghcr.io/banghasan/apimuslim3:latest
+    container_name: apimuslim3
+    volumes:
+      - ./data:/app/data
+      - ./env:/app/.env
+    restart: unless-stopped
+    networks:
+      - hasanNet
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=hasanNet"
+      - "traefik.http.routers.apimuslim3.rule=Host(`api.domain.com`) && PathPrefix(`/v3`)"
+      - "traefik.http.routers.apimuslim3.middlewares=logger,common-ratelimit,strip-all-prefix"
+      - "traefik.http.services.apimuslim3.loadbalancer.server.port=8000"
+      - "traefik.http.routers.apimuslim3.entrypoints=web"
+      ## tambahkan nama service yang akan menuju container ini
+      - "traefik.http.routers.apimuslim3.service=apimuslim3-service"
+      - "traefik.http.services.apimuslim3-service.loadbalancer.server.port=8000"
+
+networks:
+  hasanNet:
+    external: true

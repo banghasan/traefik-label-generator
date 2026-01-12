@@ -1,0 +1,21 @@
+services:
+  darkstat:
+    image: didierc/docker-darkstat
+    container_name: darkstat
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./config:/darkstat/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - OPTIONS=-i eno1 -b 172.17.0.1 -p 89890 --daylog darkstat.log --verbose --import darkstat.db --export darkstat.db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.darkstat.rule=Host(`darkstat.domain.com`)"
+      - "traefik.http.routers.darkstat.entrypoints=web"
+      - "traefik.http.routers.darkstat.middlewares=auth-user"
+      # Trik: Mendefinisikan service secara manual yang mengarah ke luar
+      - "traefik.http.routers.darkstat.service=darkstat-external"
+      - "traefik.http.services.darkstat-external.loadbalancer.server.url=http://172.17.0.1:89890"
+
+## Network tidak usah ditambahkan lagi

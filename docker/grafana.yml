@@ -1,0 +1,21 @@
+services:
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Ganti password ini nanti
+    networks:
+      - hasanNet
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=hasanNet"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.domain.com`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+networks:
+  hasanNet:
+    external: true

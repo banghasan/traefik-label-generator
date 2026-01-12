@@ -1,0 +1,90 @@
+services:
+  traefik:
+    image: "traefik:latest"
+    container_name: "traefik"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=hasanNet"
+      - "--entryPoints.web.address=:80"
+
+      ### Prometheus
+      # Menambahkan Entrypoint khusus untuk metrics
+      - "--entrypoints.metrics.address=:8082"
+      # Mengaktifkan Metrics
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+
+      ### PLUGINS MIDDLEWARE
+
+      #- "--entrypoints.web.forwardedHeaders.insecure=true"  # IP Spoofing (memalsukan IP) ke host target.
+
+      #- "--experimental.plugins.cloudflarewarp.modulename=github.com/agence-gaya/traefik-plugin-cloudflare"
+      #- "--experimental.plugins.cloudflarewarp.version=v1.2.0"
+
+      # Module buat benerin IP cloudflare
+      - "--experimental.plugins.cloudflarewarp.modulename=github.com/BetterCorp/cloudflarewarp"
+      - "--experimental.plugins.cloudflarewarp.version=v1.3.3"
+
+      # github.com/tomMoulard/fail2ban    ## GAGAL
+      # github.com/charanpreetp/fail2ban  # Bisa tapi tidak ada durasi findtime
+      #- "--experimental.localPlugins.fail2ban.moduleName=github.com/banghasan/fail2ban"
+
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+
+      ## dashboard
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.domain.com`)"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=web"
+      - "traefik.http.routers.traefik-dashboard.middlewares=auth-user"
+
+      ## middleware compress
+      - "traefik.http.middlewares.gzip-compress.compress=true"
+
+      ## midleware untuk strip /path pertama
+      - "traefik.http.middlewares.strip-all-prefix.stripprefixregex.regex=^/[^/]+"
+
+      ## midleware untuk cloudflarewarp
+      - "traefik.http.middlewares.cloudflarewarp.plugin.cloudflarewarp.disabledefault=false"
+      #- "traefik.http.middlewares.cloudflarewarp.plugin.cloudflarewarp.overwriteRequestHeader=true"
+
+      ## midleware untuk auth user
+      - "traefik.http.middlewares.auth-user.basicauth.users=${BASIC_AUTH_USERS}"
+
+      # --- MIDDLEWARE RATELIMIT ---
+      - "traefik.http.middlewares.common-ratelimit.ratelimit.average=2"
+      - "traefik.http.middlewares.common-ratelimit.ratelimit.burst=1"
+      - "traefik.http.middlewares.common-ratelimit.ratelimit.sourcecriterion.requestheadername=X-Real-Ip"
+    networks:
+      - hasanNet
+
+  whoami:
+    image: "traefik/whoami"
+    container_name: "whoami"
+    restart: unless-stopped
+    environment:
+      - WHOAMI_NAME=bangHasan@orang.paling.cakep.seantero.web.id
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=hasanNet"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.domain.com`)"
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.whoami.middlewares=common-ratelimit"
+    networks:
+      - hasanNet
+
+networks:
+  hasanNet:
+    external: true
